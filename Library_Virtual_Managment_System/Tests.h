@@ -5,5 +5,6 @@
 #define TESTS_H
 
 void bookClassTest();
+void userClassTest();
 
 #endif // TESTS_H

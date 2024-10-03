@@ -2,11 +2,12 @@
 // Author: WKK
 
 #include "Book.h"
+#include "User.h"
 #include "tests.h"
 
 void bookClassTest()
 {
-    std::cout << "\n=== Book Class Test ===\n\n";
+    std::cout << "\n====== Book Class Test ======\n\n";
 
     // Creating an array of Book objects
     Book shelf[2];
@@ -46,5 +47,42 @@ void bookClassTest()
     shelf[0].displayDetails();
     shelf[1].displayDetails();
 
-    std::cout << "\n=== Test Completed ===\n";
+    std::cout << "\n====== Test Completed ======\n";
 }
+
+void userClassTest() {
+
+    std::cout << "\n======= User Class Test ======\n\n";
+
+    // Create a user
+    std::cout << "Creating User" << std::endl << std::endl;;
+    User user("John", "johnspassword");
+
+    // Test login with correct password
+    if (user.login("johnspassword")) std::cout << "Login successful!" << std::endl << std:endl;
+    else std::cout << "Login failed!" << std::endl << std::endl;
+
+    // Test login with incorrect password
+    if (user.login("wrongpassword")) std::cout << "Login successful!" << std::endl << std::endl;
+    else std::cout << "Login failed!" << std::endl << std::endl;
+
+    // Test resetting password
+    if (user.resetPassword("1234", "newpassword")) std::cout << "Password reset successful!" << std::endl << std::endl;
+    else std::cout << "Password reset failed!" << std::endl << std::endl;
+
+    // Test login with the new password
+    if (user.login("newpassword")) std::cout << "Login with new password successful!" << std::endl << std::endl;
+    else std::cout << "Login with new password failed!" << std::endl << std::endl;
+
+    std::cout << "====== Test Completed ======\n";
+}
+
+
+
+
+
+
+
+
+
+

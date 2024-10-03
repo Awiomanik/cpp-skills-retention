@@ -25,7 +25,7 @@ public:
     // Constructor with initializer list
     Book(std::string title, std::string author, std::string ISBN);
 
-    /// Accessors and Mutators
+    // Accessors and Mutators
     std::string getTitle() const;
     void setTitle(const std::string& newTitle);
     std::string getAuthor() const;
