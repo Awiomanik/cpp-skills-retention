@@ -11,6 +11,7 @@
 #include <openssl/sha.h>
 
 class User {
+// Abstract class for users
 private:
     std::string name;
     std::string hash;
@@ -31,6 +32,7 @@ public:
 
     // Accessors and Mutators
     std::string getUserName() const;
+    std::string getHash() const;
 };
 
 #endif //USER_H

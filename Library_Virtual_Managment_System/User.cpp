@@ -21,22 +21,22 @@ std::string User::hashPassword(const std::string& password){
 
 // Constructor
 User::User(const std::string& username, const std::string& password): name(username)
-{ hash = password; } //temporary
+{ hash = hashPassword(password); }
 
 bool User::login(const std::string& password){
-    if (hash == password) return true; // temporary
+    if (hash == hashPassword(password)) return true;
     else return false;
 }
 
 // Reseting password with master key
 bool User::resetPassword(const std::string& masterKeyIn, const std::string& newPassword){
     if (masterKey == masterKeyIn){
-        hash = newPassword; // temporary
+        hash = hashPassword(newPassword);
         return true;
     }
     else return false;
 }
 
 // Accessors and Mutators
-std::string User::getUserName() const
-{ return name; }
+std::string User::getUserName() const { return name; }
+std::string User::getHash() const { return hash; }

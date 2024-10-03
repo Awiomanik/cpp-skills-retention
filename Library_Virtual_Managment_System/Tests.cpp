@@ -55,22 +55,26 @@ void userClassTest() {
     std::cout << "\n======= User Class Test ======\n\n";
 
     // Create a user
-    std::cout << "Creating User" << std::endl << std::endl;;
+    std::cout << "Creating User." << std::endl << std::endl;;
     User user("John", "johnspassword");
 
     // Test login with correct password
-    if (user.login("johnspassword")) std::cout << "Login successful!" << std::endl << std:endl;
+    std::cout << "Testing logging with correct password:" << std::endl;
+    if (user.login("johnspassword")) std::cout << "Login successful!" << std::endl << std::endl;
     else std::cout << "Login failed!" << std::endl << std::endl;
 
     // Test login with incorrect password
+    std::cout << "Testing logging with incorrect password:" << std::endl;
     if (user.login("wrongpassword")) std::cout << "Login successful!" << std::endl << std::endl;
-    else std::cout << "Login failed!" << std::endl << std::endl;
+    else std::cout << "Login failed sucessfully!" << std::endl << std::endl;
 
     // Test resetting password
+    std::cout << "Testing password reset:" << std::endl;
     if (user.resetPassword("1234", "newpassword")) std::cout << "Password reset successful!" << std::endl << std::endl;
     else std::cout << "Password reset failed!" << std::endl << std::endl;
 
     // Test login with the new password
+    std::cout << "Testing logging with the new password:" << std::endl;
     if (user.login("newpassword")) std::cout << "Login with new password successful!" << std::endl << std::endl;
     else std::cout << "Login with new password failed!" << std::endl << std::endl;
 
