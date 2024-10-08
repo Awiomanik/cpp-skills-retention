@@ -3,6 +3,10 @@
 
 #include "User.h"
 
+/////////////////////
+// USER (Abstract) //
+/////////////////////
+
 // Initialize static masterKey
 std::string User::masterKey = "1234"; // temporary
 
@@ -20,12 +24,24 @@ std::string User::hashPassword(const std::string& password){
     }
 
 // Constructor
-User::User(const std::string& username, const std::string& password): name(username)
+User::User(const std::string& username, const std::string& password,
+           unsigned int limit, unsigned int current,
+           const std::vector<Book>& issuedBooks)
+: name(username), limit(limit), current(current), 
 { hash = hashPassword(password); }
 
+// Other methods
 bool User::login(const std::string& password){
     if (hash == hashPassword(password)) return true;
     else return false;
+}
+void User::issueBook(const Book& book){
+    IssuedBooks.push_back(book);
+    numOfCurrentlyIssued++;
+}
+void User::returnBook(const Book& book){
+    IssuedBooks.erase(std::find(IssuedBooks.begin(), IssuedBooks.end(), book));
+    numOfCurrentlyIssued--;
 }
 
 // Reseting password with master key
@@ -40,3 +56,26 @@ bool User::resetPassword(const std::string& masterKeyIn, const std::string& newP
 // Accessors and Mutators
 std::string User::getUserName() const { return name; }
 std::string User::getHash() const { return hash; }
+
+// Destructor (pure virtual method)
+User::~User() {}
+
+///////////////////////
+// STUDENT (Derived) //
+///////////////////////
+
+// Constructors with explicit call of the base constructor to ensure it's execution
+Student::Student(const std::string& username, const std::string& password, 
+        unsigned int bookLimit, unsigned int current)
+    : User(username, password), limit(bookLimit), numOfCurrentlyIssued(current) {}
+
+// Other methods
+bool Student::issueBook(const Book& book) {
+    if (numOfCurrentlyIssued >= limit) return false;
+    User::issueBook(book);
+    return true;
+}
+
+// Destructor
+Student::~Student() {}
+

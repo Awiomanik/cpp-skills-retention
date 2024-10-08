@@ -7,6 +7,7 @@
 int main()
 {
     bookClassTest();
+    shelfClassTest();
     userClassTest();
 
     return 0;

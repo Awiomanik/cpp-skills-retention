@@ -5,21 +5,18 @@
 
 // BOOK CLASS //
 
-// Initialize static book counter
-unsigned int Book::bookCount = 0;
-
 // Default constructor with initializer list
 Book::Book() : title("-"), author("-"), ISBN("-"), isAvailable(true), dueDate(std::nullopt)
-{ std::cout << "Uninitilized book was created.\n"; bookCount++; }
+{ std::cout << "Uninitilized book was created.\n"; }
 // Constructor of a new book
 Book::Book(const std::string title, const std::string author, const std::string ISBN)
 : title(title), author(author), ISBN(ISBN), isAvailable(true), dueDate(std::nullopt)
-{ std::cout << "\"" << title << "\" book was created.\n"; bookCount++; }
+{ std::cout << "\"" << title << "\" book was created.\n"; }
 // Complete constructor
 Book::Book(const std::string title, const std::string author, const std::string ISBN, 
 const bool isAvailable, const std::optional<std::chrono::system_clock::time_point> dueDate)
 : title(title), author(author), ISBN(ISBN), isAvailable(isAvailable), dueDate(dueDate)
-{ std::cout << "Uninitilized book was constructed from data.\n"; bookCount++; }
+{ std::cout << "\"" << title << "\" book was constructed from data.\n"; }
 
 // Accessors and Mutators
 std::string Book::getTitle() const { return title; }
@@ -75,22 +72,33 @@ void Book::returnBook() { clearDueDate(); setAvailability(true); }
 
 // SHELF CLASS //
 
+// Initialize static book counter
+unsigned int Shelf::bookCount = 0;
+
 // Initialize instance to null-pointer
 Shelf* Shelf::instance = nullptr;
 
-// Public static method to get Shelf instnce
+// Public static methods to get Shelf instnce and to destroy it
 Shelf* Shelf::getInstance(){
     if (instance == nullptr) instance = new Shelf();
     return instance;
 }
 
+// Destroctor to release memory
+Shelf::~Shelf() {
+    if (instance) {
+        delete instance;
+        instance = nullptr;
+    }
+}
+
 // Other methods
-std::string Shelf::encode(const std::string& text2Encode){
+std::string Shelf::asciiEncode(const std::string& text2Encode) const{
     std::ostringstream encoded;
     for (char ch : text2Encode) encoded << static_cast<int>(ch) << " ";
     return encoded.str();
 }
-std::string Shelf::decode(const std::string& text2Decode){
+std::string Shelf::asciiDecode(const std::string& text2Decode) const{
     std::istringstream encoded(text2Decode);
     std::string asciiCharacter;
     std::ostringstream decoded;
@@ -104,29 +112,61 @@ std::string Shelf::decode(const std::string& text2Decode){
 void Shelf::loadBooksFromFile(const std::string filename = "storage/book_data.dat"){
     std::ifstream file(filename);
     if (file.is_open()){
-        std::string bookTitle, bookAuthor, bookISBN, bookAvailability, bookDueDate;
+        std::string bookTitle, bookAuthor, bookISBN, bookAvailability, bookDueDate, line;
         bool availability;
         std::optional<std::chrono::system_clock::time_point> date;
 
-        while(file >> bookTitle >> bookAuthor >> bookISBN >> bookAvailability >> bookDueDate){
+        while (getline(file, line)){
+            std::istringstream lineStream(line);
+            std::getline(lineStream, bookTitle, ':');
+            std::getline(lineStream, bookAuthor, ':');
+            std::getline(lineStream, bookISBN, ':');
+            std::getline(lineStream, bookAvailability, ':');
+            std::getline(lineStream, bookDueDate, ':');
+
             // Availability
+            bookAvailability = asciiDecode(bookAvailability);
             if (bookAvailability == "true") availability = true;
             else availability = false;
             // Due date
-            if (bookDueDate == "-1") date = std::nullopt;
+            bookDueDate = asciiDecode(bookDueDate);
+            if (bookDueDate == "No due date set.") date = std::nullopt;
             else date = std::chrono::system_clock::from_time_t(std::stol(bookDueDate));
 
             // Append book 
-            books.push_back(Book(bookTitle, bookAuthor, bookISBN, availability, date));
+            books.push_back(Book(asciiDecode(bookTitle), asciiDecode(bookAuthor), 
+            asciiDecode(bookISBN), availability, date));
         }
+        file.close();
+
+        bookCount = books.size();
+        
     } else std::cerr << "Error: Could not open file " << filename << std::endl;
 }
 void Shelf::saveBooksToFile(const std::string filename = "storage/book_data.dat") const{
-    
+    std::ofstream file(filename); // Opens file in truncate mode by default
+
+    if (file.is_open()){
+        for (const Book& book : books){
+            file << asciiEncode(book.getTitle()) << " : "
+                 << asciiEncode(book.getAuthor()) << " : "
+                 << asciiEncode(book.getISBN()) << " : "
+                 << asciiEncode((book.getAvailability() ? "true" : "false")) << " : "
+                 << asciiEncode(book.getDueDate()) << std::endl;
+        }
+        file.close();
+
+    } else std::cerr << "Error: Could not open file " << filename << std::endl;
 }
 
 //Accessor
+void Shelf::addBooks(const std::initializer_list<Book>& newBooks) { 
+    books.insert(books.end(), newBooks); 
+    bookCount = bookCount + newBooks.size(); 
+}
+void Shelf::clearBooks() { books.clear(); bookCount = 0; }
 std::vector<Book> Shelf::getBooks() const { return books; } 
+unsigned int Shelf::getBookCount() const { return bookCount; }
 
 
 

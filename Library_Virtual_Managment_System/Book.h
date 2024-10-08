@@ -20,15 +20,13 @@ private:
     bool isAvailable;
     std::optional<std::chrono::system_clock::time_point> dueDate;
 
-    static unsigned int bookCount;
-
 public:
     // Default constructor with initializer list
     Book();
     // Constructor with initializer list
     Book(const std::string title, const std::string author, const std::string ISBN);
     // Complete constructor
-    Book::Book(const std::string title, const std::string author, const std::string ISBN, 
+    Book(const std::string title, const std::string author, const std::string ISBN, 
     const bool isAvailable, const std::optional<std::chrono::system_clock::time_point> dueDate);
 
 
@@ -57,26 +55,33 @@ class Shelf{
 private:
     static Shelf* instance; // Static pointer to the single instance of itself
     std::vector<Book> books;
+    static unsigned int bookCount;
 
     // Constructor (private to prevent instantiation from outside the class)
     Shelf() {}
 
 public:
-    // Public static method to get Shelf instnce
+    // Public static methods to get Shelf instnce and to destroy it
     static Shelf* getInstance();
+
+    // Destructor
+    ~Shelf();
 
     // Prevent copying and assigning the shelf
     Shelf(const Shelf&) = delete; // Deleting copy constructor
     Shelf& operator=(const Shelf&) = delete; // Deleting assignment operator
 
     // Other methods
-    std::string encode(const std::string& text2Encode);
-    std::string decode(const std::string& text2Decode);
+    std::string asciiEncode(const std::string& text2Encode) const;
+    std::string asciiDecode(const std::string& text2Decode) const;
     void loadBooksFromFile(const std::string filename);
     void saveBooksToFile(const std::string filename) const;
 
-    //Accessor
+    // Accessors and Mutators
+    void addBooks(const std::initializer_list<Book>& newBooks);
+    void clearBooks();
     std::vector<Book> getBooks() const; 
+    unsigned int getBookCount() const;
 };
 
 #endif // BOOK_H
