@@ -16,26 +16,29 @@
 class User {
 // Abstract class for users
 private:
+    static std::string masterKey;
+
+    // Hashing method
+    static std::string hashPassword(const std::string& password); 
+
+protected:
     std::string name;
     std::string hash;
     std::vector<Book> issuedBooks;
     unsigned int numOfCurrentlyIssued;
     const unsigned int limit;
 
-    static std::string masterKey;
-
-    // Hashing method
-    std::string hashPassword(const std::string& password);    
-
 public:
-    // Constructor
-    User(const std::string& username, const std::string& password,
-         unsigned int limit = 5, unsigned int current = 0,
-         const std::vector<Book>& issuedBooks = {});
+    // Constructor from all data
+    User(const std::string& username, const std::string& hash, const unsigned int limit,
+         const unsigned int current, const std::vector<Book>& issuedBooks);
+    
+    // New user constructor 
+    User(const std::string& username, const std::string& password, const unsigned int limit);
 
     // Other methods
     bool login(const std::string& password);
-    virtual void issueBook(const Book& book);
+    virtual bool issueBook(const Book& book);
     void returnBook(const Book& book);
 
     // Reseting password with master key
@@ -54,8 +57,11 @@ public:
     const unsigned int limit;
 
     // Constructor
-    Student(const std::string& username, const std::string& password, 
-            unsigned int bookLimit = 5, unsigned int current = 0);
+    Student(const std::string& username, const std::string& hash, 
+            unsigned int current = 0, std::vector<Book> books = {});
+
+    // New user constructor (Must be used with isNewFlag)
+    Student(const std::string& username, const std::string& password, bool isNewFlag);
 
     // Other methods
     bool issueBook(const Book& book) override;

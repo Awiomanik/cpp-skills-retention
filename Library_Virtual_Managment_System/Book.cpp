@@ -69,6 +69,8 @@ std::string Book::issueBook(int howManyDays)
     return "Book is not available at the moment. Due date: " + getDueDate() + ".\n";
 }
 void Book::returnBook() { clearDueDate(); setAvailability(true); }
+bool Book::operator==(const Book& other) const
+{ return title == other.title && author == other.author && ISBN == other.ISBN; }
 
 // SHELF CLASS //
 

@@ -48,6 +48,7 @@ public:
     void displayDetails() const;
     std::string issueBook(int howManyDays);
     void returnBook();
+    bool operator==(const Book& other) const;
 };
 
 class Shelf{

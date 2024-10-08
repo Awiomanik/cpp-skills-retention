@@ -8,7 +8,7 @@
 /////////////////////
 
 // Initialize static masterKey
-std::string User::masterKey = "1234"; // temporary
+std::string User::masterKey = "31415926"; // temporary
 
 // Hashing method
 std::string User::hashPassword(const std::string& password){
@@ -23,24 +23,29 @@ std::string User::hashPassword(const std::string& password){
     return oss.str();
     }
 
-// Constructor
-User::User(const std::string& username, const std::string& password,
-           unsigned int limit, unsigned int current,
-           const std::vector<Book>& issuedBooks)
-: name(username), limit(limit), current(current), 
-{ hash = hashPassword(password); }
+// Constructor from all data
+User::User(const std::string& username, const std::string& hash, const unsigned int limit,
+           const unsigned int current, const std::vector<Book>& issuedBooks)
+: name(username), hash(hash),
+limit(limit), numOfCurrentlyIssued(current), issuedBooks(issuedBooks) {}
+
+// New user onstructor
+User::User(const std::string& username, const std::string& password, const unsigned int limit) 
+: name(username), limit(limit), numOfCurrentlyIssued(0), issuedBooks(std::vector<Book>()) 
+{ hash = password; }
 
 // Other methods
 bool User::login(const std::string& password){
     if (hash == hashPassword(password)) return true;
     else return false;
 }
-void User::issueBook(const Book& book){
-    IssuedBooks.push_back(book);
+bool User::issueBook(const Book& book){
+    issuedBooks.push_back(book);
     numOfCurrentlyIssued++;
+    return false;
 }
 void User::returnBook(const Book& book){
-    IssuedBooks.erase(std::find(IssuedBooks.begin(), IssuedBooks.end(), book));
+    issuedBooks.erase(std::find(issuedBooks.begin(), issuedBooks.end(), book));
     numOfCurrentlyIssued--;
 }
 
@@ -64,10 +69,14 @@ User::~User() {}
 // STUDENT (Derived) //
 ///////////////////////
 
-// Constructors with explicit call of the base constructor to ensure it's execution
-Student::Student(const std::string& username, const std::string& password, 
-        unsigned int bookLimit, unsigned int current)
-    : User(username, password), limit(bookLimit), numOfCurrentlyIssued(current) {}
+// Constructors with explicit call of the base constructor
+Student::Student(const std::string& username, const std::string& hash, 
+                 unsigned int current, std::vector<Book> books)
+: User(username, hash, 5, current, books) {}
+
+// New user constructor
+Student::Student(const std::string& username, const std::string& password, bool isNewFlag)
+: User(username, password, 5) {}
 
 // Other methods
 bool Student::issueBook(const Book& book) {
@@ -77,5 +86,5 @@ bool Student::issueBook(const Book& book) {
 }
 
 // Destructor
-Student::~Student() {}
+Student::~Student() { delete issuedBooks; }
 
