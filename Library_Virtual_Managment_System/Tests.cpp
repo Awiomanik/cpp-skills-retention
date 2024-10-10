@@ -121,12 +121,40 @@ void userClassesTest() {
               << "\n=========================== User Classes Test =========================="
               << "\n========================================================================\n\n";
 
+    // Prepare books for testing
+    Book book1("1984", "George Orwell", "123456789");
+    Book book2("Brave New World", "Aldous Huxley", "123456789");
+    Book book3("Fahrenheit 451", "Ray Bradbury", "123456789");
+    Book book4("The Great Gatsby", "F. Scott Fitzgerald", "123456789");
+    Book book5("Moby-Dick", "Herman Melville", "123456789");
+    Book book6("To Kill a Mockingbird", "Harper Lee", "123456789");
+    Book book7("Title7", "Author3", "123456789");
+    Book book8("Title8", "Author4", "123456789");
+    Book book9("Title9", "Author1", "123456789");
+    Book book10("Title10", "Author2", "123456789");
+    Book book11("Title11", "Author3", "123456789");
+    std::vector<Book> shelf = {book1, book2, book3};
+
     // Create a user
-    std::cout << "Creating Users:" << std::endl;
+    std::cout << "\nCreating New Users:" << std::endl;
     Student student1("John", "johnspassword", true);
     std::cout << "Student created." << std::endl;
     Professor prof1("Anna", "AnnasPassword@!&$", true);
     std::cout << "Profesor created." << std::endl << std::endl;
+    
+    std::cout << "Creating Users from data:" << std::endl;
+    Student student2("Default data", "example hash 1");
+    std::cout << "Student created: " << std::endl
+              << student2.getUserName() << ", " << student2.getHash() << ", "
+              << student2.getNumberOfIssuedBooks() << std::endl;
+    Professor prof2("Explicit default data", "example hash 2", 0, {});
+    std::cout << "Profesor created: " << std::endl
+              << prof2.getUserName() << ", " << prof2.getHash() << ", "
+              << prof2.getNumberOfIssuedBooks() << std::endl;
+    Student student3("Some data", "example hash 3", 2, shelf);
+    std::cout << "Student created: " << std::endl
+              << student3.getUserName() << ", " << student3.getHash() << ", "
+              << student3.getNumberOfIssuedBooks() << std::endl << std::endl;
 
     // Test login with correct password
     std::cout << "Testing logging with correct password:" << std::endl;
@@ -162,17 +190,6 @@ void userClassesTest() {
 
     // Test book issue
     std::cout << "Testing issuing books:" << std::endl;
-    Book book1("Title1", "Author1", "123456789");
-    Book book2("Title2", "Author2", "123456789");
-    Book book3("Title3", "Author3", "123456789");
-    Book book4("Title4", "Author4", "123456789");
-    Book book5("Title5", "Author1", "123456789");
-    Book book6("Title6", "Author2", "123456789");
-    Book book7("Title7", "Author3", "123456789");
-    Book book8("Title8", "Author4", "123456789");
-    Book book9("Title9", "Author1", "123456789");
-    Book book10("Title10", "Author2", "123456789");
-    Book book11("Title11", "Author3", "123456789");
     student1.issueBook(book1);
     student1.issueBook(book2);
     student1.issueBook(book3);
@@ -208,12 +225,49 @@ void userClassesTest() {
     if(prof1.getNumberOfIssuedBooks() == 8 && 
        student1.getNumberOfIssuedBooks() == 3)
         { std::cout << "Books successfully returned!" << std::endl; }
+
     std::cout << "Returning non-issued books:" << std::endl;
-    student1.returnBook(book10);
-    std::cout << prof1.returnBook(book3);
-    
+    if(!student1.returnBook(book10) && !prof1.returnBook(book3)) {
+        unsigned int numStu = student1.getNumberOfIssuedBooks();
+        unsigned int numPro = prof1.getNumberOfIssuedBooks();
 
+        if(numStu == 3 && numPro == 8) {
+            std::cout << "Non-issued books failed to return successfully!" << std::endl << std::endl;
+        } else { 
+            std::cout << "Number of issued books does not match expected one!" << std::endl <<
+                         "Number of books issued (professor, student): (" << numPro <<
+                         ", " << numStu << ")  -  Expected: (8, 3)" << std::endl << std::endl;
+        }
+    } else { std::cout << "Fail! Non-issued books got returned!" << std::endl << std::endl; }
 
+    std::cout << "Final Test: Issue and Return Limits:" << std::endl;
+    // Issue books until the student's limit is reached
+    student1.issueBook(book1);
+    student1.issueBook(book2);
+    std::cout << "Number of currently issued books (expected: 5): " 
+              << student1.getNumberOfIssuedBooks() << std::endl;
+    // Attempt to issue another book beyond the limit
+    student1.issueBook(book6);
+    std::cout << "Number of currently issued books (expected: 5): " 
+              << student1.getNumberOfIssuedBooks() << std::endl;
+    // Return a book and attempt to issue again
+    student1.returnBook(book1);
+    student1.issueBook(book6);
+    std::cout << "Number of currently issued books (expected: 5): " 
+              << student1.getNumberOfIssuedBooks() << std::endl;
+    // Attempt to return the same book multiple times
+    if (student1.returnBook(book1)) std::cout << "Error: Returned book1 again!" << std::endl;
+    else std::cout << "Correctly prevented returning book1 again." << std::endl;
+    student1.returnBook(book2);
+    student1.returnBook(book3);
+    student1.returnBook(book4);
+    student1.returnBook(book5);
+    student1.returnBook(book6);
+    std::cout << "Number of currently issued books (expected: 0): " 
+              << student1.getNumberOfIssuedBooks() << std::endl;
+    student1.returnBook(book1);    
+    std::cout << "Number of currently issued books (expected: 0): " 
+              << student1.getNumberOfIssuedBooks() << std::endl;
 
     std::cout << "\n========================================================================"
               << "\n============================ Test Completed ============================"
