@@ -77,6 +77,7 @@ public:
     std::string asciiDecode(const std::string& text2Decode) const;
     void loadBooksFromFile(const std::string filename);
     void saveBooksToFile(const std::string filename) const;
+    static unsigned int getIndex(const std::vector<Book>& books, const Book& targetBook);
 
     // Accessors and Mutators
     void addBooks(const std::initializer_list<Book>& newBooks);

@@ -69,6 +69,8 @@ std::string Book::issueBook(int howManyDays)
     return "Book is not available at the moment. Due date: " + getDueDate() + ".\n";
 }
 void Book::returnBook() { clearDueDate(); setAvailability(true); }
+
+// Operators
 bool Book::operator==(const Book& other) const
 { return title == other.title && author == other.author && ISBN == other.ISBN; }
 
@@ -159,6 +161,10 @@ void Shelf::saveBooksToFile(const std::string filename = "storage/book_data.dat"
         file.close();
 
     } else std::cerr << "Error: Could not open file " << filename << std::endl;
+}
+unsigned int Shelf::getIndex(const std::vector<Book>& books, const Book& targetBook){
+    for(size_t i = 0; i < books.size(); i++) if(books[i] == targetBook) return i;
+    return -1;
 }
 
 //Accessor

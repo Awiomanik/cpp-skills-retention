@@ -6,6 +6,6 @@
 
 void bookClassTest();
 void shelfClassTest();
-void userClassTest();
+void userClassesTest();
 
 #endif // TESTS_H

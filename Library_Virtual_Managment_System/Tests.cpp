@@ -122,29 +122,98 @@ void userClassesTest() {
               << "\n========================================================================\n\n";
 
     // Create a user
-    std::cout << "Creating Users." << std::endl << std::endl;;
-    Student student1("John", "johnspassword");
-    // prof
+    std::cout << "Creating Users:" << std::endl;
+    Student student1("John", "johnspassword", true);
+    std::cout << "Student created." << std::endl;
+    Professor prof1("Anna", "AnnasPassword@!&$", true);
+    std::cout << "Profesor created." << std::endl << std::endl;
 
     // Test login with correct password
     std::cout << "Testing logging with correct password:" << std::endl;
-    if (student1.login("johnspassword")) std::cout << "Login successful!" << std::endl << std::endl;
-    else std::cout << "Login failed!" << std::endl << std::endl;
+    if (student1.login("johnspassword")) std::cout << "Student login successful!" << std::endl;
+    else std::cout << "Student login failed!" << std::endl;
+    if (prof1.login("AnnasPassword@!&$")) std::cout << "Professor login successful!" << std::endl << std::endl;
+    else std::cout << "Professor login failed!" << std::endl << std::endl;
 
     // Test login with incorrect password
     std::cout << "Testing logging with incorrect password:" << std::endl;
-    if (student1.login("wrongpassword")) std::cout << "Login successful!" << std::endl << std::endl;
-    else std::cout << "Login failed sucessfully!" << std::endl << std::endl;
+    if (student1.login("wrongpassword")) std::cout << "Student login successful!" << std::endl;
+    else std::cout << "Student login failed sucessfully!" << std::endl;
+    if (prof1.login("wrongpassword")) std::cout << "Professor login successful!" << std::endl << std::endl;
+    else std::cout << "Professor login failed sucessfully!" << std::endl << std::endl;
 
     // Test resetting password
     std::cout << "Testing password reset:" << std::endl;
-    if (student.resetPassword("31415926", "newpassword")) std::cout << "Password reset successful!" << std::endl << std::endl;
+    if (student1.resetPassword("31415926", "newpassword1")) std::cout << "Password reset successful!" << std::endl;
+    else std::cout << "Password reset failed!" << std::endl;
+    if (prof1.resetPassword("31415926", "newpassword2")) std::cout << "Password reset successful!" << std::endl << std::endl;
     else std::cout << "Password reset failed!" << std::endl << std::endl;
+
+    std::cout << "Testing password reset with wrong reset code:" << std::endl;
+    if (student1.resetPassword("123", "anotherpassword")) std::cout << "Password reset successful!" << std::endl;
+    else std::cout << "Password reset failed successfully!" << std::endl << std::endl;
 
     // Test login with the new password
     std::cout << "Testing logging with the new password:" << std::endl;
-    if (student.login("newpassword")) std::cout << "Login with new password successful!" << std::endl << std::endl;
-    else std::cout << "Login with new password failed!" << std::endl;
+    if (student1.login("newpassword1")) std::cout << "Student login with new password successful!" << std::endl;
+    else std::cout << "Student login with new password failed!" << std::endl;
+    if (prof1.login("newpassword2")) std::cout << "Professor login with new password successful!" << std::endl << std::endl;
+    else std::cout << "Professor login with new password failed!" << std::endl << std::endl;
+
+    // Test book issue
+    std::cout << "Testing issuing books:" << std::endl;
+    Book book1("Title1", "Author1", "123456789");
+    Book book2("Title2", "Author2", "123456789");
+    Book book3("Title3", "Author3", "123456789");
+    Book book4("Title4", "Author4", "123456789");
+    Book book5("Title5", "Author1", "123456789");
+    Book book6("Title6", "Author2", "123456789");
+    Book book7("Title7", "Author3", "123456789");
+    Book book8("Title8", "Author4", "123456789");
+    Book book9("Title9", "Author1", "123456789");
+    Book book10("Title10", "Author2", "123456789");
+    Book book11("Title11", "Author3", "123456789");
+    student1.issueBook(book1);
+    student1.issueBook(book2);
+    student1.issueBook(book3);
+    student1.issueBook(book4);
+    if(student1.issueBook(book5)) std::cout << "Student issued fifth book successfully!" << std::endl;
+    else std::cout << "Student failed to issue fifth book!" << std::endl;
+    if(student1.issueBook(book6)) std::cout << "Student issued sixth book successfully!" << std::endl;
+    else std::cout << "Student failed to issue sixth book!" << std::endl;
+    prof1.issueBook(book1);
+    prof1.issueBook(book2);
+    prof1.issueBook(book3);
+    prof1.issueBook(book4);
+    prof1.issueBook(book5);
+    prof1.issueBook(book6);
+    prof1.issueBook(book7);
+    prof1.issueBook(book8);
+    prof1.issueBook(book9);
+    if(prof1.issueBook(book10)) std::cout << "Professor issued tenth book successfully!" << std::endl;
+    else std::cout << "Professor failed to issue tenth book!" << std::endl;
+    if(prof1.issueBook(book11)) std::cout << "Professor issued eleventh book successfully!" << std::endl;
+    else std::cout << "Professor failed to issue eleventh book!" << std::endl;
+    if(student1.getNumberOfIssuedBooks() == 5 && 
+       prof1.getNumberOfIssuedBooks() == 10) 
+        { std::cout << "All books issued successfully!" << std::endl << std::endl; }
+
+    // Test book return
+    std::cout << "Testing returning books:" << std::endl;
+    std::cout << "Returning issued books:" << std::endl;
+    student1.returnBook(book1);
+    student1.returnBook(book2);
+    prof1.returnBook(book3);
+    prof1.returnBook(book4);
+    if(prof1.getNumberOfIssuedBooks() == 8 && 
+       student1.getNumberOfIssuedBooks() == 3)
+        { std::cout << "Books successfully returned!" << std::endl; }
+    std::cout << "Returning non-issued books:" << std::endl;
+    student1.returnBook(book10);
+    std::cout << prof1.returnBook(book3);
+    
+
+
 
     std::cout << "\n========================================================================"
               << "\n============================ Test Completed ============================"

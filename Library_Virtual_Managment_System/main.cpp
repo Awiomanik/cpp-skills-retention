@@ -6,9 +6,9 @@
 
 int main()
 {
-    //bookClassTest();
-    //shelfClassTest();
-    userClassTest();
+    bookClassTest();
+    shelfClassTest();
+    userClassesTest();
 
     return 0;
 }

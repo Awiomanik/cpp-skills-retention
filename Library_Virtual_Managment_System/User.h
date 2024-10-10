@@ -39,7 +39,7 @@ public:
     // Other methods
     bool login(const std::string& password);
     virtual bool issueBook(const Book& book);
-    void returnBook(const Book& book);
+    bool returnBook(const Book& book);
 
     // Reseting password with master key
     bool resetPassword(const std::string& masterKeyIn, const std::string& newPassword);
@@ -47,6 +47,7 @@ public:
     // Accessors and Mutators
     std::string getUserName() const;
     std::string getHash() const;
+    unsigned int getNumberOfIssuedBooks() const;
 
     // Destructor (pure virtual method to ensure it's override and make USer abstract)
     virtual ~User() = 0;
@@ -54,20 +55,34 @@ public:
 
 class Student : public User {
 public:
-    const unsigned int limit;
-
     // Constructor
     Student(const std::string& username, const std::string& hash, 
-            unsigned int current = 0, std::vector<Book> books = {});
+            const unsigned int current = 0, const std::vector<Book>& books = {});
 
     // New user constructor (Must be used with isNewFlag)
-    Student(const std::string& username, const std::string& password, bool isNewFlag);
+    Student(const std::string& username, const std::string& password, const bool isNewFlag);
 
     // Other methods
     bool issueBook(const Book& book) override;
 
     // Destructor
     ~Student();
+};
+
+class Professor : public User {
+public:
+    // Constructor
+    Professor(const std::string& username, const std::string& hash, 
+              const unsigned int current = 0, const std::vector<Book>& books = {});
+
+    // New user constructor (Must be used with isNewFlag)
+    Professor(const std::string& username, const std::string& password, const bool isNewFlag);
+
+    // Other methods
+    bool issueBook(const Book& book) override;
+
+    // Destructor
+    ~Professor();
 };
 
 

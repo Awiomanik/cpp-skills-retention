@@ -8,7 +8,7 @@
 /////////////////////
 
 // Initialize static masterKey
-std::string User::masterKey = "31415926"; // temporary
+std::string User::masterKey = "31415926";
 
 // Hashing method
 std::string User::hashPassword(const std::string& password){
@@ -31,11 +31,14 @@ limit(limit), numOfCurrentlyIssued(current), issuedBooks(issuedBooks) {}
 
 // New user onstructor
 User::User(const std::string& username, const std::string& password, const unsigned int limit) 
-: name(username), limit(limit), numOfCurrentlyIssued(0), issuedBooks(std::vector<Book>()) 
-{ hash = password; }
+: name(username), limit(limit), numOfCurrentlyIssued(0), issuedBooks({}) 
+{ hash = hashPassword(password); }
 
 // Other methods
 bool User::login(const std::string& password){
+    // Debug print
+    //std::cout << "\n\n\nhash: " << hash << "\npassword: " 
+    //<< password << "\nhashed password: " << hashPassword(password) << "\n\n\n";
     if (hash == hashPassword(password)) return true;
     else return false;
 }
@@ -44,9 +47,12 @@ bool User::issueBook(const Book& book){
     numOfCurrentlyIssued++;
     return false;
 }
-void User::returnBook(const Book& book){
-    issuedBooks.erase(std::find(issuedBooks.begin(), issuedBooks.end(), book));
+bool User::returnBook(const Book& book){
+    unsigned int index = Shelf::getIndex(issuedBooks, book);
+    if(index == -1) return false;
+    issuedBooks.erase(issuedBooks.begin() + index);
     numOfCurrentlyIssued--;
+    return true;
 }
 
 // Reseting password with master key
@@ -61,6 +67,7 @@ bool User::resetPassword(const std::string& masterKeyIn, const std::string& newP
 // Accessors and Mutators
 std::string User::getUserName() const { return name; }
 std::string User::getHash() const { return hash; }
+unsigned int User::getNumberOfIssuedBooks() const { return issuedBooks.size(); }
 
 // Destructor (pure virtual method)
 User::~User() {}
@@ -71,12 +78,15 @@ User::~User() {}
 
 // Constructors with explicit call of the base constructor
 Student::Student(const std::string& username, const std::string& hash, 
-                 unsigned int current, std::vector<Book> books)
+                 const unsigned int current, const std::vector<Book>& books)
 : User(username, hash, 5, current, books) {}
 
-// New user constructor
-Student::Student(const std::string& username, const std::string& password, bool isNewFlag)
-: User(username, password, 5) {}
+// New user constructor (isNewFlag is not used directly, it's function is to make overloading unamiguous)
+Student::Student(const std::string& username, const std::string& password, const bool isNewFlag)
+: User(username, password, 5) {
+    // Debug print:
+    //std::cout << "New user constructor was called" << std::endl;
+}
 
 // Other methods
 bool Student::issueBook(const Book& book) {
@@ -86,5 +96,25 @@ bool Student::issueBook(const Book& book) {
 }
 
 // Destructor
-Student::~Student() { delete issuedBooks; }
+Student::~Student() {}
 
+/////////////////////////
+// PROFESSOR (Derived) //
+/////////////////////////
+
+// Constructors
+Professor::Professor(const std::string& username, const std::string& hash,
+                     const unsigned int current, const std::vector<Book>& books)
+: User(username, hash, 10, current, books) {}
+Professor::Professor(const std::string& username, const std::string& password, const bool isNewFlag)
+: User(username, password, 10) {}
+
+// Other mathods
+bool Professor::issueBook(const Book& book) {
+    if (numOfCurrentlyIssued >= limit) return false;
+    User::issueBook(book);
+    return true;
+}
+
+// Destructor
+Professor::~Professor() {}
