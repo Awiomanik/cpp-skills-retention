@@ -69,7 +69,43 @@ std::string Book::issueBook(int howManyDays)
     return "Book is not available at the moment. Due date: " + getDueDate() + ".\n";
 }
 void Book::returnBook() { clearDueDate(); setAvailability(true); }
+std::string Book::toEncryptedString() const{
+    std::stringstream ss;
 
+    ss << Shelf::asciiEncode(title) << " : "
+       << Shelf::asciiEncode(author) << " : "
+       << Shelf::asciiEncode(ISBN) << " : "
+       << Shelf::asciiEncode(isAvailable ? "true" : "false") << " : "
+       << Shelf::asciiEncode(this->getDueDate());
+
+    return ss.str();
+
+}
+Book Book::fromEncryptedString(const std::string& encryptedBook){
+    std::string bookTitle, bookAuthor, bookISBN, bookAvailability, bookDueDate;
+    std::istringstream ss(encryptedBook);
+    bool availability;
+    std::optional<std::chrono::system_clock::time_point> date;
+
+    std::getline(ss, bookTitle, ':');
+    std::getline(ss, bookAuthor, ':');
+    std::getline(ss, bookISBN, ':');
+    std::getline(ss, bookAvailability, ':');
+    std::getline(ss, bookDueDate, ':');
+
+    // Availability
+    bookAvailability = Shelf::asciiDecode(bookAvailability);
+    if (bookAvailability == "true") availability = true;
+    else availability = false;
+    // Due date
+    bookDueDate = Shelf::asciiDecode(bookDueDate);
+    if (bookDueDate == "No due date set.") date = std::nullopt;
+    else date = std::chrono::system_clock::from_time_t(std::stol(bookDueDate));
+
+    // Construct book
+    return Book(Shelf::asciiDecode(bookTitle), Shelf::asciiDecode(bookAuthor), 
+                Shelf::asciiDecode(bookISBN), availability, date);
+}
 // Operators
 bool Book::operator==(const Book& other) const
 { return title == other.title && author == other.author && ISBN == other.ISBN; }
@@ -97,12 +133,12 @@ Shelf::~Shelf() {
 }
 
 // Other methods
-std::string Shelf::asciiEncode(const std::string& text2Encode) const{
+std::string Shelf::asciiEncode(const std::string& text2Encode){
     std::ostringstream encoded;
     for (char ch : text2Encode) encoded << static_cast<int>(ch) << " ";
     return encoded.str();
 }
-std::string Shelf::asciiDecode(const std::string& text2Decode) const{
+std::string Shelf::asciiDecode(const std::string& text2Decode){
     std::istringstream encoded(text2Decode);
     std::string asciiCharacter;
     std::ostringstream decoded;
@@ -152,11 +188,7 @@ void Shelf::saveBooksToFile(const std::string filename = "storage/book_data.dat"
 
     if (file.is_open()){
         for (const Book& book : books){
-            file << asciiEncode(book.getTitle()) << " : "
-                 << asciiEncode(book.getAuthor()) << " : "
-                 << asciiEncode(book.getISBN()) << " : "
-                 << asciiEncode((book.getAvailability() ? "true" : "false")) << " : "
-                 << asciiEncode(book.getDueDate()) << std::endl;
+            file << book.toEncryptedString() << std::endl;
         }
         file.close();
 

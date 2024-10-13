@@ -49,6 +49,8 @@ public:
     std::string issueBook(int howManyDays);
     void returnBook();
     bool operator==(const Book& other) const;
+    std::string toEncryptedString() const;
+    static Book fromEncryptedString(const std::string& encryptedBook);
 };
 
 class Shelf{
@@ -73,8 +75,8 @@ public:
     Shelf& operator=(const Shelf&) = delete; // Deleting assignment operator
 
     // Other methods
-    std::string asciiEncode(const std::string& text2Encode) const;
-    std::string asciiDecode(const std::string& text2Decode) const;
+    static std::string asciiEncode(const std::string& text2Encode);
+    static std::string asciiDecode(const std::string& text2Decode);
     void loadBooksFromFile(const std::string filename);
     void saveBooksToFile(const std::string filename) const;
     static unsigned int getIndex(const std::vector<Book>& books, const Book& targetBook);

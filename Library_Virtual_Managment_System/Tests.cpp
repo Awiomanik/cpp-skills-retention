@@ -269,6 +269,36 @@ void userClassesTest() {
     std::cout << "Number of currently issued books (expected: 0): " 
               << student1.getNumberOfIssuedBooks() << std::endl;
 
+    // File manipulation test
+    // Prepare a map of users (ssmap)
+    ssmap users;
+    users["john"] = student1.getHash() + student1.;
+    users["anna"] = prof1.getHash();
+    users["testuser"] = "testhash";
+
+    // Save users to a file
+    std::string filename = "users_test.json";
+    User::saveUsers(users, filename);
+    std::cout << "Users saved to file: " << filename << std::endl;
+
+    // Load users from the file
+    ssmap loadedUsers = User::loadUsers(filename);
+    std::cout << "Users loaded from file." << std::endl;
+
+    // Check if the loaded data matches the original data
+    if (loadedUsers == users) {
+        std::cout << "File manipulation test passed! Loaded users match saved users." << std::endl;
+    } else {
+        std::cout << "File manipulation test failed! Loaded users do not match saved users." << std::endl;
+    }
+
+    // Clean up: delete the test file after use
+    if (std::remove(filename.c_str()) == 0) {
+        std::cout << "Test file " << filename << " deleted successfully." << std::endl;
+    } else {
+        std::cout << "Failed to delete test file " << filename << std::endl;
+    }
+
     std::cout << "\n========================================================================"
               << "\n============================ Test Completed ============================"
               << "\n========================================================================\n\n\n";
