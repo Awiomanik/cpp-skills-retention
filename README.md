@@ -45,3 +45,25 @@ Develop a C++ program to manage a virtual library system, where different types 
 
 #### Optional (Bonus Feature):
 - Implement penalties for late returns, allowing users to view their penalties based on how overdue their return is.
+
+
+---
+
+
+## TASK 2: Sudoku Solver
+
+### Objective:
+Develop a C++ program that implements a Sudoku solver using a backtracking algorithm. The program should read Sudoku puzzles from a predefined set or ones inputed by user, solve them, and display the solution. 
+
+### Requirements:
+
+#### Recursion:
+- Use recursive algorythm like backtracking.
+
+#### Display:
+- Allow for customizable display settings (e.g., step delay).
+- Display a step-by-step solution of the puzzle.
+
+#### Constrains:
+- Focus on a clear and efficient implementation without using classes.
+- Validate Sudoku grids.
