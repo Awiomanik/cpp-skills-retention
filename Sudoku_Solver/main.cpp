@@ -345,7 +345,8 @@ int main() {
 
         // User solves sudoku ###########################
         else{
-            std::cout << "there!";
+            system("cls");
+            std::cerr << "[ERROR] Feature not implemented: User solves sudoku\n";
         }
 
         std::cout << "\nWould you like to e(X)it the programm or (C)ontinue with new sudoku? ";
