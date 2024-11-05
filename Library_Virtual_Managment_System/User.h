@@ -13,6 +13,8 @@
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 #include <openssl/aes.h>
+#include <openssl/rand.h>
+#include <openssl/evp.h>
 
 #include "Book.h"
 
@@ -23,16 +25,17 @@ class User {
 // Abstract class for users
 private:
     static std::string masterKey;
+    static unsigned char encryptionKey[16];
 
     // Hashing method
-    static std::string hashPassword(const std::string& password); 
+    static std::string hashPassword(const std::string& password);
 
 protected:
     std::string name;
     std::string hash;
-    std::vector<Book> issuedBooks;
-    unsigned int numOfCurrentlyIssued;
     const unsigned int limit;
+    unsigned int numOfCurrentlyIssued;
+    std::vector<Book> issuedBooks;
 
 public:
     // Constructor from all data
@@ -68,22 +71,24 @@ public:
     // User data will be stored as json string.
 private:
     // Padding function (PKCS#7)
-    void pad(unsigned char* data, int block_size = 16);
+    static void pad(std::vector<unsigned char>& data, int block_size = 16);
     // Unpadding function (PKCS#7)
-    int unpad(unsigned char* data);
-    static void encrypt(const unsigned char* plaintext, unsigned char* ciphertext, 
-                        const unsigned char* key, unsigned char* ini_vector);
+    static int unpad(const std::vector<unsigned char>& data);
+    static void encrypt(const std::vector<unsigned char>& plaintext, 
+                        std::vector<unsigned char>& ciphertext, const unsigned char* key);
     // AES CBC decryption (with padding)
     static void decrypt(const unsigned char* ciphertext, 
                         unsigned char* decryptedtext, 
-                        const unsigned char* key, unsigned char* ini_vector);
+                        const unsigned char* key,
+                        size_t ciphertextSize);
+public:
     // Get hashed usernames from file
-    static svec loadHashedUsers(const std::string& filename = "user_data.json");
+    static svec loadHashedUsers(const std::string& filename = "user_data.dat");
     // Get users data by Username
     static json loadUserData(const std::string& username, 
-                             const std::string& filenmae = "user_data.json");
-    static void saveUsers(const ssmap& users, 
-                          const std::string& filename = "users_data.json");
+                             const std::string& filename = "user_data.dat");
+    // Add User to database
+    void addUserToDatabase(const std::string& filename = "user_data.dat");
 };
 
 class Student : public User {

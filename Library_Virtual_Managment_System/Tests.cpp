@@ -269,36 +269,144 @@ void userClassesTest() {
     std::cout << "Number of currently issued books (expected: 0): " 
               << student1.getNumberOfIssuedBooks() << std::endl;
 
-    // File manipulation test
-    // Prepare a map of users (ssmap)
-    ssmap users;
-    users["john"] = student1.getHash() + student1.;
-    users["anna"] = prof1.getHash();
-    users["testuser"] = "testhash";
 
-    // Save users to a file
-    std::string filename = "users_test.json";
-    User::saveUsers(users, filename);
-    std::cout << "Users saved to file: " << filename << std::endl;
+////////////////////
 
-    // Load users from the file
-    ssmap loadedUsers = User::loadUsers(filename);
-    std::cout << "Users loaded from file." << std::endl;
+    // Prepare a JSON file with users' encrypted data
+    std::string filename = "storage/encrypted_users_test.dat";
 
-    // Check if the loaded data matches the original data
-    if (loadedUsers == users) {
-        std::cout << "File manipulation test passed! Loaded users match saved users." << std::endl;
-    } else {
-        std::cout << "File manipulation test failed! Loaded users do not match saved users." << std::endl;
+    // Add users to the database
+    std::cout << std::endl << "Adding users to the database and saving to file..." << std::endl;
+    student1.addUserToDatabase(filename);
+    std::cout << "Added user: " << student1.getUserName() << " with hash: " << student1.getHash() << std::endl;
+
+    prof1.addUserToDatabase(filename);
+    std::cout << "Added user: " << prof1.getUserName() << " with hash: " << prof1.getHash() << std::endl;
+
+    student3.addUserToDatabase(filename);
+    std::cout << "Added user: " << student3.getUserName() << " with hash: " << student3.getHash() << std::endl;
+
+    std::cout << "Users added and saved to file: " << filename << std::endl;
+
+    // Load hashed usernames from the file
+    std::cout << std::endl << "Loading hashed usernames from file..." << std::endl;
+    svec hashedUsers = User::loadHashedUsers(filename);
+    std::cout << "Loaded hashed usernames: " << std::endl;
+    for (const auto& user : hashedUsers) {
+        std::cout << " - " << user << std::endl;
     }
 
-    // Clean up: delete the test file after use
+    // Check if the correct usernames exist
+    std::string encodedStudent = Shelf::asciiEncode(student1.getUserName());
+    std::string encodedProfessor = Shelf::asciiEncode(prof1.getUserName());
+    std::string encodedStudent3 = Shelf::asciiEncode(student3.getUserName());
+
+    std::cout << "Encoded usernames: " << std::endl;
+    std::cout << " - " << encodedStudent << std::endl;
+    std::cout << " - " << encodedProfessor << std::endl;
+    std::cout << " - " << encodedStudent3 << std::endl;
+
+    if (std::find(hashedUsers.begin(), hashedUsers.end(), encodedStudent) != hashedUsers.end() &&
+        std::find(hashedUsers.begin(), hashedUsers.end(), encodedProfessor) != hashedUsers.end() &&
+        std::find(hashedUsers.begin(), hashedUsers.end(), encodedStudent3) != hashedUsers.end()) {
+        std::cout << "Usernames found in the file successfully!" << std::endl;
+    } else {
+        std::cout << "Error: Some usernames were not found in the file!" << std::endl;
+    }
+
+    // Load individual user data
+    std::cout << "Loading user data for " << student1.getUserName() << "..." << std::endl;
+    json loadedStudentData = User::loadUserData(student1.getUserName(), filename);
+    if (!loadedStudentData.empty()) {
+        std::cout << "Student data loaded successfully: " << loadedStudentData.dump(4) << std::endl;
+    } else {
+        std::cout << "Error: Student data could not be loaded!" << std::endl;
+    }
+
+    // Data verification
+    std::cout << "Verifying loaded data against original data..." << std::endl;
+    std::cout << "Loaded Student Hash: " << loadedStudentData["hash"] << ", Expected Hash: " << student1.getHash() << std::endl;
+
+    if (loadedStudentData["hash"] == student1.getHash()) {
+        std::cout << "Data verification passed! Loaded data matches original data." << std::endl;
+    } else {
+        std::cout << "Data verification failed! Loaded data does not match original data." << std::endl;
+    }
+
+
+
+
+/*
+
+    // File manipulation test with encryption
+    std::cout << "\nFile manipulation test with encryption:" << std::endl;
+
+    // Prepare a JSON file with users' encrypted data
+    std::string filename = "encrypted_users_test.dat";
+
+    // Add users to the database
+    std::cout << "Adding users to the database and saving to file..." << std::endl;
+    student1.addUserToDatabase(filename);
+    prof1.addUserToDatabase(filename);
+    student3.addUserToDatabase(filename);
+    std::cout << "Users added and saved to file: " << filename << std::endl;
+
+    // Load hashed usernames from the file
+    std::cout << "Loading hashed usernames from file..." << std::endl;
+    svec hashedUsers = User::loadHashedUsers(filename);
+    std::cout << "Loaded hashed usernames: " << std::endl;
+    for (const auto& user : hashedUsers) {
+        std::cout << " - " << user << std::endl;
+    }
+
+    // Check if the correct usernames exist
+    std::string encodedStudent = Shelf::asciiEncode(student1.getUserName());
+    std::string encodedProfessor = Shelf::asciiEncode(prof1.getUserName());
+    std::string encodedStudent3 = Shelf::asciiEncode(student3.getUserName());
+
+    if (std::find(hashedUsers.begin(), hashedUsers.end(), encodedStudent) != hashedUsers.end() &&
+        std::find(hashedUsers.begin(), hashedUsers.end(), encodedProfessor) != hashedUsers.end() &&
+        std::find(hashedUsers.begin(), hashedUsers.end(), encodedStudent3) != hashedUsers.end()) {
+        std::cout << "Usernames found in the file successfully!" << std::endl;
+    } else {
+        std::cout << "Error: Some usernames were not found in the file!" << std::endl;
+    }
+
+    // Load individual user data
+    std::cout << "Loading user data for " << student1.getUserName() << "..." << std::endl;
+    json loadedStudentData = User::loadUserData(student1.getUserName(), filename);
+    if (!loadedStudentData.empty()) {
+        std::cout << "Student data loaded successfully: " << loadedStudentData.dump(4) << std::endl;
+    } else {
+        std::cout << "Error: Student data could not be loaded!" << std::endl;
+    }
+
+    std::cout << "Loading user data for " << prof1.getUserName() << "..." << std::endl;
+    json loadedProfessorData = User::loadUserData(prof1.getUserName(), filename);
+    if (!loadedProfessorData.empty()) {
+        std::cout << "Professor data loaded successfully: " << loadedProfessorData.dump(4) << std::endl;
+    } else {
+        std::cout << "Error: Professor data could not be loaded!" << std::endl;
+    }
+
+    // Verify that the loaded data matches the original user data
+    std::cout << "Verifying loaded data against original data..." << std::endl;
+
+    if (loadedStudentData["hash"] == student1.getHash() && 
+        loadedProfessorData["hash"] == prof1.getHash()) {
+        std::cout << "Data verification passed! Loaded data matches original data." << std::endl;
+    } else {
+        std::cout << "Data verification failed! Loaded data does not match original data." << std::endl;
+    }
+
+    // Delete test file after use
     if (std::remove(filename.c_str()) == 0) {
         std::cout << "Test file " << filename << " deleted successfully." << std::endl;
     } else {
         std::cout << "Failed to delete test file " << filename << std::endl;
     }
 
+*/
     std::cout << "\n========================================================================"
               << "\n============================ Test Completed ============================"
               << "\n========================================================================\n\n\n";
