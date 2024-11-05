@@ -136,40 +136,93 @@ const Grid predefinedSudokus[numOfPredefinedSudokus] = {
 };
 
 // Function to display the Sudoku grid
-void displayGrid(const Grid& grid) {
+void displayGrid(const Grid& grid, short coloredRow=-1, short coloredColumn=-1, int colorCode=33) {
     system("cls");    
 
-    std::cout << "+-------+-------+-------+\n| ";
+    std::cout << "+-------+-------+-------+\n";
     for (short row = 0; row < SIZE; ++row) {
-        if (row % 3 == 0 && row != 0) std::cout << "\b\b+-------+-------+-------+\n| ";
-        
+        if (row % 3 == 0 && row != 0) std::cout << "+-------+-------+-------+\n";
+        std::cout << "| ";
+
+        // Change color
+        if (coloredRow == row) std::cout << "\033[" << colorCode << "m";
+
+        // Draw
         for (short col = 0; col < SIZE; ++col) {
-            if (col % 3 == 0 && col != 0) std::cout << "| ";
+            if (col == coloredColumn) std::cout << "\033[" << colorCode << "m";
+            if (col % 3 == 0 && col != 0) {
+                if (row == coloredRow) std::cout << "\033[0m" << "| " << "\033[" << colorCode << "m";
+                else std::cout << "| ";
+            }
             if (grid[row][col] == 0) std::cout << ". ";
             else std::cout << grid[row][col] << " ";
-            
+            if (col == coloredColumn && row != coloredRow) std::cout << "\b" << "\033[0m" << " ";
         }
-        std::cout << "|\n| ";
+
+        // Return to original color
+        if (coloredRow == row) std::cout << "\033[0m";
+        
+        std::cout << "|\n";
     }
-    std::cout << "\b\b+-------+-------+-------+\n";
+    std::cout << "\b\b+-------+-------+-------+\n\n";
 }
 
 // Function to update single character in sudoku (Sudoku must be at the top left corner of the screen)
-void updateDisplayedGrid(short num, short row, short col){
+void updateDisplayedGrid(short num, short row, short col, int colorCode=0){
     // Move the cursor to the correct position in the console
     std::cout << "\033[" << ((row + 2) + (row / 3)) << ";" << ((col * 2 + 3) + (col / 3) * 2) << "H"; // Adjust for 1-based index and space
 
     // Update the cell value
-    if (num == 0) std::cout << ". ";
-    else std::cout << num << " ";
+    if (num == 0) std::cout << "\033[" << colorCode << "m" << "." << "\033[m";
+    else if (num <= 9) std::cout << "\033[" << colorCode << "m" << num << "\033[m";
+    else std::cout << "\033[" << colorCode << "m" << static_cast<char>(num) << "\033[m";
 
     std::cout << "\033[" << 14 << ";" << 1 << "H";
     std::cout.flush();
 }
 
+// Function to check validity of a given number in a given cell
+bool isValid(const Grid& grid, short row, short col, short number) {
+    for (short i = 0; i < SIZE; ++i){
+        if ((i != row && grid[i][col] == number) || (i != col && grid[row][i] == number)) return false;
+    }
+
+    short box_row = (row / 3) * 3;
+    short box_col = (col / 3) * 3;
+    for (short i = 0; i < 3; ++i) {
+        for (short j = 0; j < 3; ++j) {
+            if (box_row + i != row && box_col + j != col && grid[box_row + i][box_col + j] == number) return false;
+        }
+    }
+
+    return true;
+}
+
+// Function to check wheter the puzzle is solvable
+bool isSolvable(const Grid& grid){
+    for (short row=0; row < SIZE; row++) for (short col=0; col < SIZE; col++) if (grid[row][col] != 0 && !isValid(grid, row, col, grid[row][col])) return false;
+    return true;
+}
+
+// Function to change sudoku tiles one by one
+void changeTiles(Grid& grid, const std::vector<std::vector<bool>>& accessibleGrid){
+    short row = 4;
+    short col = 4;
+
+    bool running = true;
+    while(running){
+        // Color row and column
+        displayGrid(grid, row, col); 
+        if (accessibleGrid[row][col]) updateDisplayedGrid(95, row, col, 33);
+        
+        running = false;
+    }
+}
+
 // Function to input the Sudoku puzzle
 void inputSudoku(Grid& grid) {
     displayGrid(grid);
+    int colorCode = 0;
 
     for (short row = 0; row < SIZE; row++) {
         for (short col = 0; col < SIZE; col++) {
@@ -177,6 +230,7 @@ void inputSudoku(Grid& grid) {
             bool validInput = false;
 
             while (!validInput) {
+                updateDisplayedGrid(95, row, col, 33);
                 std::cout << "\rEnter value for cell (" << row + 1 << ", " << col + 1 << "): ";
                 
                 char input = _getch();
@@ -184,8 +238,10 @@ void inputSudoku(Grid& grid) {
                 if (input == '\r') { // If Enter (empty input)
                     grid[row][col] = 0; // Set cell as empty (0)
                     validInput = true;
+                    colorCode = 32;
 
                 } else if (input == '\b') { // backspace
+                    updateDisplayedGrid(0, row, col);
                     if (col == 0 && row > 0) {
                         col = SIZE - 1;
                         row--;
@@ -203,35 +259,28 @@ void inputSudoku(Grid& grid) {
                     if (value > 0 && value <= 9) {
                         grid[row][col] = value;
                         validInput = true;
+                        if (isValid(grid, row, col, value)) colorCode = 32;
+                        else colorCode = 31;
+                        
                     } 
                     //else std::cout << "\nInvalid input! Please enter a number between 1 and 9, or press Enter for an empty cell.\n";
                 } //else std::cout << "\nInvalid input! Please enter a number between 1 and 9, or press Enter for an empty cell.\n";
             }
 
-            updateDisplayedGrid(grid[row][col], row, col);
+            updateDisplayedGrid(grid[row][col], row, col, colorCode);
         }
     }
-    displayGrid(grid);
-    std::cout << "Sudoku puzzle input complete!\n";
-    std::cout << "Solving...";
     
-}
+    displayGrid(grid);
+    if (isSolvable(grid)) std::cout << "Sudoku puzzle input complete!\n\n";
 
-// Function to check validity of a given number in a given cell
-bool isValid(const Grid& grid, short row, short col, short number) {
-    for (short i = 0; i < SIZE; ++i){
-        if (grid[row][i] == number || grid[i][col] == number) return false;
+    else {
+        std::cout << "\033[31mSudoku is unsolvable!\033[0m\n\n";
+        std::this_thread::sleep_for(ms(2000));
+        std::vector<std::vector<bool>> acc = {{false, false, false}, {false, false, false}, {false, false, false}};
+
+        changeTiles(grid, acc);
     }
-
-    short box_row = (row / 3) * 3;
-    short box_col = (col / 3) * 3;
-    for (short i = 0; i < 3; ++i) {
-        for (short j = 0; j < 3; ++j) {
-            if (grid[box_row + i][box_col + j] == number) return false;
-        }
-    }
-
-    return true;
 }
 
 /** 
@@ -243,6 +292,10 @@ bool isValid(const Grid& grid, short row, short col, short number) {
  */
 bool solveSudoku(Grid& grid, bool displayProgress=false, ms tempo=ms(10)){
 
+    // Check validity of the sudoku
+    if (!isSolvable(grid)) return false;
+
+    // Brute-force with backtracking
     for (short row = 0; row < SIZE; ++row) {
         for (short col = 0; col < SIZE; ++col) {
 
@@ -250,11 +303,15 @@ bool solveSudoku(Grid& grid, bool displayProgress=false, ms tempo=ms(10)){
 
                 for (short num = 1; num <= 9; ++num) {
                     if (displayProgress){
-                        updateDisplayedGrid(num, row, col);
+                        updateDisplayedGrid(num, row, col, 33);
                         std::this_thread::sleep_for(tempo);
                     }
 
                     if (isValid(grid, row, col, num)) {
+                        if (displayProgress){
+                            updateDisplayedGrid(num, row, col, 32);
+                            std::this_thread::sleep_for(tempo);
+                        }
                         grid[row][col] = num;
                         if (solveSudoku(grid, displayProgress, tempo)) return true;
                         grid[row][col] = 0; // If not solved return grid to previous state (backtrack)
@@ -262,7 +319,7 @@ bool solveSudoku(Grid& grid, bool displayProgress=false, ms tempo=ms(10)){
                 }   }
 
                 if (displayProgress) {
-                    updateDisplayedGrid(0, row, col);
+                    updateDisplayedGrid(0, row, col, 31);
                     std::this_thread::sleep_for(tempo);
                 }
 
@@ -279,13 +336,14 @@ int main() {
     while (running){
 
         system("cls");
-        std::cout << "   ____          __       __            ____       __\n  / __/__ __ ___/ /___   / /__ __ __   / __/___   / /_  __ ___  ____\n _\\ \\ / // // _  // _ \\ /  '_// // /  _\\ \\ / _ \\ / /| |/ // -_)/ __/\n/___/ \\___/ \\___/ \\___//_/\\_\\ \\___/  /___/ \\___//_/ |___/ \\__//_/\n\n\n";
+        std::cout << "\033[33m   ____          __       __            ____       __\n  / __/__ __ ___/ /___   / /__ __ __   / __/___   / /_  __ ___  ____\n _\\ \\ / // // _  // _ \\ /  '_// // /  _\\ \\ / _ \\ / /| |/ // -_)/ __/\n/___/ \\___/ \\___/ \\___//_/\\_\\ \\___/  /___/ \\___//_/ |___/ \\__//_/\033[0m\n\n\n";
 
         // Step 1: Choose between custom input or predefined grid
-        std::cout << "Do you want to (I)nput a Sudoku puzzle or use a (P)redefined one? ";
+        std::cout << "Do you want to (I)nput a Sudoku puzzle or use a (P)redefined one? (or e(X)it)\n";
         std::cin >> choice;
 
-        if (choice == 'I' || choice == 'i') {
+        if (choice == 'x' || choice == 'X') running = false;
+        if (choice == 'i' || choice == 'I') {
             // Custom input
             sudokuGrid = Grid(9, std::vector<short>(9, 0));
             inputSudoku(sudokuGrid);
@@ -295,8 +353,8 @@ int main() {
             bool choosing = true;
             while (choosing){
                 displayGrid(predefinedSudokus[sudoku_index]);
-                std::cout << "\nConfirm choice of " << predefinedSudokusNames[sudoku_index] 
-                          << " with (ENTER),\nor change it to (H)arder or (E)asier sudoku.";
+                std::cout << "Confirm choice of " << predefinedSudokusNames[sudoku_index] 
+                          << " with (ENTER),\nor change it to \033[31m(H)arder\033[0m or \033[32m(E)asier\033[0m sudoku.";
                 choice = _getch();
                 if (choice == 'h' || choice == 'H') sudoku_index = ++sudoku_index % numOfPredefinedSudokus;
                 else if (choice == 'e' || choice == 'E') sudoku_index = (--sudoku_index + numOfPredefinedSudokus) % numOfPredefinedSudokus;
@@ -310,7 +368,7 @@ int main() {
         }
 
         // Step 2: Choose whether player wants to solve sudoku or to get it solved by the programm
-        std::cout << "\n\nDo you want the (P)rogramm to solve the puzzle or do you want to try and solve it (Y)ourself? ";
+        std::cout << "\nDo you want the (P)rogramm to solve the puzzle or do you want to try and solve it (Y)ourself? ";
         std::cin >> choice;
 
         // Programm solves sudoku
@@ -338,9 +396,9 @@ int main() {
             // Step 4: Solve the puzzle
             if (solveSudoku(sudokuGrid, displayProgress, ms(delayMs))) {
                 displayGrid(sudokuGrid); 
-                std::cout << "\nSudoku solved!\n\n";
+                std::cout << "\n\033[32mSmudoku solved!\033[0m\n\n";
             }
-            else std::cout << "\rNo solution exists for the given Sudoku! \n";
+            else std::cout << "\r\033[31mNo solution exists for the given Sudoku!\033[0m\n";
         }
 
         // User solves sudoku ###########################
