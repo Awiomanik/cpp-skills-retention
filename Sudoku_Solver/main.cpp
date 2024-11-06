@@ -137,7 +137,7 @@ const Grid predefinedSudokus[numOfPredefinedSudokus] = {
 
 // Function to display the Sudoku grid
 void displayGrid(const Grid& grid, short coloredRow=-1, short coloredColumn=-1, int colorCode=33) {
-    system("cls");    
+    std::cout << "\033[1;1H"; // Move the coursor to the top of the console
 
     std::cout << "+-------+-------+-------+\n";
     for (short row = 0; row < SIZE; ++row) {
@@ -150,12 +150,16 @@ void displayGrid(const Grid& grid, short coloredRow=-1, short coloredColumn=-1, 
         // Draw
         for (short col = 0; col < SIZE; ++col) {
             if (col == coloredColumn) std::cout << "\033[" << colorCode << "m";
+
             if (col % 3 == 0 && col != 0) {
-                if (row == coloredRow) std::cout << "\033[0m" << "| " << "\033[" << colorCode << "m";
+                if (row == coloredRow || col == coloredColumn) std::cout << "\033[0m" << "| " << "\033[" << colorCode << "m";
                 else std::cout << "| ";
             }
+
             if (grid[row][col] == 0) std::cout << ". ";
+
             else std::cout << grid[row][col] << " ";
+
             if (col == coloredColumn && row != coloredRow) std::cout << "\b" << "\033[0m" << " ";
         }
 
@@ -204,23 +208,50 @@ bool isSolvable(const Grid& grid){
     return true;
 }
 
+// Function checks given grid for solvability and colors invalid numbers
+void colorValidity(const Grid& grid, int colorCode=31){
+    for (short i=0; i<SIZE; i++) for (int j=0; j<SIZE; j++) if (!isValid(grid, i, j, grid[i][j]) && grid[i][j] != 0) updateDisplayedGrid(grid[i][j], i, j, colorCode);
+}
+
 // Function to change sudoku tiles one by one
 void changeTiles(Grid& grid, const std::vector<std::vector<bool>>& accessibleGrid){
     short row = 4;
     short col = 4;
+    int key;
 
     bool running = true;
     while(running){
-        // Color row and column
+        // Disply colored grid
         displayGrid(grid, row, col); 
-        if (accessibleGrid[row][col]) updateDisplayedGrid(95, row, col, 33);
-        
-        running = false;
+        colorValidity(grid);
+        if (accessibleGrid[row][col]) updateDisplayedGrid(grid[row][col] == 0 ? 95 : grid[row][col], row, col, 33);
+
+        std::cout << "\nThis sudoku is unsolvable.\n" 
+                  << "Please use W (^), S (v), A(<), D(>) keys to navigate to the tile you want to replace and input a new digit.\n";
+
+        // Parse input
+        while(true){
+            key = _getch();
+            if (key == 119) {row = (--row + SIZE) % SIZE; break;}   // w
+            if (key == 115) {row = ++row % SIZE; break;}            // s
+            if (key == 97) {col = (--col + SIZE) % SIZE; break;}    // a
+            if (key == 100) {col = ++col % SIZE; break;}            // d
+            if (isdigit(key) && accessibleGrid[row][col]) {grid[row][col] = key - '0'; break;}  // digit
+            if (key == 'x') running = false; break;
+        }
+
+        // Check validity
+
     }
 }
 
 // Function to input the Sudoku puzzle
 void inputSudoku(Grid& grid) {
+
+    std::vector<std::vector<bool>> acc(9, std::vector<bool>(9, true));
+
+    changeTiles(grid, acc);
+
     displayGrid(grid);
     int colorCode = 0;
 
@@ -332,17 +363,18 @@ int main() {
     Grid sudokuGrid;
     char choice;
 
-    bool running = true;
-    while (running){
+    while (true){
 
         system("cls");
         std::cout << "\033[33m   ____          __       __            ____       __\n  / __/__ __ ___/ /___   / /__ __ __   / __/___   / /_  __ ___  ____\n _\\ \\ / // // _  // _ \\ /  '_// // /  _\\ \\ / _ \\ / /| |/ // -_)/ __/\n/___/ \\___/ \\___/ \\___//_/\\_\\ \\___/  /___/ \\___//_/ |___/ \\__//_/\033[0m\n\n\n";
 
-        // Step 1: Choose between custom input or predefined grid
-        std::cout << "Do you want to (I)nput a Sudoku puzzle or use a (P)redefined one? (or e(X)it)\n";
-        std::cin >> choice;
 
-        if (choice == 'x' || choice == 'X') running = false;
+        // Step 1: Choose between custom input or predefined grid
+        std::cout << "Do you want to (I)nput a Sudoku puzzle or use a (P)redefined one?\n\n(You can e(X)it the programm at any point)\n";
+        while(true) {choice = _getch(); if (choice == 'p' || choice == 'i' || choice == 'P' || choice == 'I' || choice == 'x' || choice == 'X') break;}
+        system("cls");
+
+        if (choice == 'x' || choice == 'X') break;
         if (choice == 'i' || choice == 'I') {
             // Custom input
             sudokuGrid = Grid(9, std::vector<short>(9, 0));
@@ -350,16 +382,17 @@ int main() {
         } else {
             // Use predefined puzzle 
             short sudoku_index = 0;
-            bool choosing = true;
-            while (choosing){
+            bool exitFlag = false;
+            while (true){
                 displayGrid(predefinedSudokus[sudoku_index]);
                 std::cout << "Confirm choice of " << predefinedSudokusNames[sudoku_index] 
                           << " with (ENTER),\nor change it to \033[31m(H)arder\033[0m or \033[32m(E)asier\033[0m sudoku.";
-                choice = _getch();
+                while(true) {choice = _getch(); if (choice == 'h' || choice == 'e' || choice == '\r' || choice == 'H' || choice == 'E' || choice == 'x' || choice == 'X') break;}
                 if (choice == 'h' || choice == 'H') sudoku_index = ++sudoku_index % numOfPredefinedSudokus;
                 else if (choice == 'e' || choice == 'E') sudoku_index = (--sudoku_index + numOfPredefinedSudokus) % numOfPredefinedSudokus;
-                else if (choice == '\r') choosing = false;
-            }
+                else if (choice == '\r') break;
+                else if (choice == 'x' || choice == 'X') {exitFlag = true; break;}
+            } if (exitFlag) break;
 
             sudokuGrid = predefinedSudokus[sudoku_index];
             displayGrid(sudokuGrid);
@@ -368,48 +401,47 @@ int main() {
         }
 
         // Step 2: Choose whether player wants to solve sudoku or to get it solved by the programm
-        std::cout << "\nDo you want the (P)rogramm to solve the puzzle or do you want to try and solve it (Y)ourself? ";
-        std::cin >> choice;
+        std::cout << "\nDo you want the (P)rogramm to solve the puzzle or do you want to try and solve it (Y)ourself?";
+        while(true) {choice = _getch(); if (choice == 'p' || choice == 'y' || choice == 'P' || choice == 'Y' || choice == 'x' || choice == 'X') break;}
 
+        if (choice == 'x' || choice == 'X') break;
         // Programm solves sudoku
         if(choice == 'P' || choice == 'p'){
-
             // Step 2.2 Choose how to display solution
-            std::cout << "Do you want a (Q)uick solution or to (D)isplay progress? ";
-            std::cin >> choice;
+            std::cout << "\nDo you want a (Q)uick solution or to (D)isplay progress? ";
+            while(true) {choice = _getch(); if (choice == 'q' || choice == 'd' || choice == 'Q' || choice == 'D' || choice == 'x' || choice == 'X') break;}
 
             bool displayProgress = false;
             int delayMs = 0;
 
+            if (choice == 'x' || choice == 'X') break;
             if (choice == 'D' || choice == 'd') {
                 displayProgress = true;
-
                 // Ask for delay speed if displaying progress
-                std::cout << "Enter delay in milliseconds for each step (e.g., 100): ";
+                std::cout << "\nEnter delay in milliseconds for each step (e.g., 100): ";
                 std::cin >> delayMs;
             }
-
             // Step 2.3: Wait for button press to start solving
             std::cout << "\nPress any key to start solving...";
             _getch();
 
             // Step 4: Solve the puzzle
             if (solveSudoku(sudokuGrid, displayProgress, ms(delayMs))) {
+                system("cls");
                 displayGrid(sudokuGrid); 
                 std::cout << "\n\033[32mSmudoku solved!\033[0m\n\n";
             }
             else std::cout << "\r\033[31mNo solution exists for the given Sudoku!\033[0m\n";
         }
-
         // User solves sudoku ###########################
         else{
             system("cls");
             std::cerr << "[ERROR] Feature not implemented: User solves sudoku\n";
         }
 
-        std::cout << "\nWould you like to e(X)it the programm or (C)ontinue with new sudoku? ";
-        std::cin >> choice;
-        if (choice == 'x' || choice == 'X') running = false;
+        std::cout << "\nWould you like to e(X)it the programm or (R)eturn back to the main screen?";
+        while(true) {choice = _getch(); if (choice == 'r' || choice == 'R' || choice == 'x' || choice == 'X') break;}
+        if (choice == 'x' || choice == 'X') break;
     }
 
     system("cls");
