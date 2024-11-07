@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 #include <string>
+#include <algorithm>
 
 using Grid = std::vector<std::vector<short>>;
 using ms = std::chrono::milliseconds;
@@ -12,7 +13,7 @@ using ms = std::chrono::milliseconds;
 const short SIZE = 9; 
 
 // Predefined sudokus
-const int numOfPredefinedSudokus = 9;
+const int numOfPredefinedSudokus = 10;
 const std::string predefinedSudokusNames[numOfPredefinedSudokus] = {
     "Casual Conundrum (50 clues)",
     "Gentle Challenge (45 clues)",
@@ -22,7 +23,8 @@ const std::string predefinedSudokusNames[numOfPredefinedSudokus] = {
     "Tough Nut to Crack (25 clues)",
     "Complex Conundrum (21 clues)",
     "Ultimate Puzzle Master (19 clues)",
-    "Insidious Enigma (17 clues)"
+    "Insidious Enigma (17 clues)",
+    "Test Grid (80 clues)"
 };
 const Grid predefinedSudokus[numOfPredefinedSudokus] = {
     // Very Easy
@@ -132,6 +134,18 @@ const Grid predefinedSudokus[numOfPredefinedSudokus] = {
         {6, 1, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 7, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 7, 0, 3, 0, 0}
+    },
+    // Test
+    Grid{
+        {1, 2, 3, 4, 5, 6, 7, 8, 9},
+        {4, 5, 6, 7, 8, 9, 1, 2, 3},
+        {7, 8, 9, 1, 2, 3, 4, 5, 6},
+        {2, 3, 4, 5, 6, 7, 8, 9, 1},
+        {5, 6, 7, 8, 9, 1, 2, 3, 4},
+        {8, 9, 1, 2, 3, 4, 5, 6, 7},
+        {3, 4, 5, 6, 7, 8, 9, 1, 2},
+        {6, 7, 8, 9, 1, 2, 3, 4, 5},
+        {9, 1, 2, 3, 4, 5, 6, 7, 0}
     }
 };
 
@@ -260,9 +274,9 @@ bool changeTiles(Grid& grid, const std::vector<std::vector<bool>>& accessibleGri
                 std::cout << "\x1b[2K\033[31mSudoku is unsolvable!\033[0m" << std::endl << "\x1b[2K" << std::endl << std::endl;
                 choices = {'w', 's', 'a', 'd', '0'};
             }
-        }
+        } else choices = {'w', 's', 'a', 'd', '0'};
         std::cout << "Please use W (^), S (v), A(<), D(>) keys to navigate to the tile you want to replace" << std::endl
-                  << "and input a new digit ('0' for an empty tile).\n\n";
+                  << "and input a new digit ('0' for an empty tile)." << std::endl << std::endl;
 
         // Parse input
         while(true){
@@ -277,8 +291,14 @@ bool changeTiles(Grid& grid, const std::vector<std::vector<bool>>& accessibleGri
             if (key == 'x') {running = false; quit = true; break;}                                     // x
         }
 
-        // Check validity
-        if (breakWhenSolved && isSolvable(grid)) break;
+        // Check if solved ####################################### change kolejnosć
+        bool filled = 
+            std::all_of(grid.begin(), grid.end(), [](const auto& row) 
+                { return std::all_of(row.begin(), row.end(), [](int val) { return val != 0; }); }
+            );
+        bool isSolved = true;
+        for (short i=0; i <SIZE; i++) for (short j=0; j < SIZE; j++)  if (!isValid(grid, i, j, grid[i][j])) isSolved = false;
+        if (breakWhenSolved && filled && isSolved) { break; }
     }
     return quit;
 }
@@ -404,6 +424,24 @@ bool solveSudoku(Grid& grid, bool displayProgress=false, ms tempo=ms(10)){
     return true; // Solved
 }
 
+// User solves sudoku
+bool userSolve(Grid& grid){
+    // tiles with no clues (mutable)
+    std::vector<std::vector<bool>> mutableTiles(9, std::vector<bool>(9, true));
+    for (short row=0; row < SIZE; row++) for (short col=0; col < SIZE; col++) if (grid[row][col] != 0) mutableTiles[row][col] = false;
+
+    system("cls");
+    displayGrid(grid);
+    
+    if (changeTiles(grid, mutableTiles)) return true;
+
+    system("cls");
+    displayGrid(grid);
+    std::cout << "\033[32mCongratulations!\nYou correctly solved the sudoku puzzle!\033[0m" << std::endl << std::endl;
+
+    return false;
+}
+
 int main() {
     Grid sudokuGrid;
     int choice;
@@ -453,7 +491,7 @@ int main() {
         // Programm solves sudoku
         if(choice == 'P' || choice == 'p'){
             // Step 2.2 Choose how to display solution
-            std::cout << "\nDo you want a (Q)uick solution or to (D)isplay progress? ";
+            std::cout << std::endl << "Do you want a (Q)uick solution or to (D)isplay progress? ";
             choice = read({'q', 'd'});
 
             bool displayProgress = false;
@@ -463,18 +501,19 @@ int main() {
             if (choice == 'D' || choice == 'd') {
                 displayProgress = true;
                 // Ask for delay speed if displaying progress
-                std::cout << "\nEnter delay in milliseconds for each step (e.g., 100): ";
+                std::cout << std::endl << "Enter delay in milliseconds for each step (e.g., 100): ";
                 std::cin >> delayMs;
             }
             // Step 2.3: Wait for button press to start solving
-            std::cout << "\nPress any key to start solving...";
+            std::cout << std::endl << std::endl << "Press any key to start solving...";
             _getch();
+            std::cout << "\rSolving...                               ";
 
             // Step 4: Solve the puzzle
             if (solveSudoku(sudokuGrid, displayProgress, ms(delayMs))) {
                 system("cls");
                 displayGrid(sudokuGrid); 
-                std::cout << "\n\033[32mSmudoku solved!\033[0m\n\n";
+                std::cout << "\033[32mSmudoku solved!\033[0m" << std::endl << std::endl;
             }
             else {
                 system("cls");
@@ -482,10 +521,11 @@ int main() {
                 std::cout << "\033[31mNo solution exists for the given Sudoku!\033[0m" << std::endl << std::endl;
             }
         }
-        // User solves sudoku ###########################
+        // User solves sudoku 
         else{
-            system("cls");
-            std::cerr << "[ERROR] Feature not implemented: User solves sudoku\n";
+            if (userSolve(sudokuGrid)) break;
+            //system("cls");
+            //std::cerr << "[ERROR] Feature not implemented: User solves sudoku\n";
         }
 
         std::cout << "Would you like to e(X)it the programm or (R)eturn back to the main screen?";
