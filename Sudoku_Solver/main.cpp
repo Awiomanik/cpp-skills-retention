@@ -233,12 +233,14 @@ void colorValidity(const Grid& grid, std::vector<std::vector<bool>> acc, int col
 }
 
 // Function to change sudoku tiles one by one
-bool changeTiles(Grid& grid, const std::vector<std::vector<bool>>& accessibleGrid){
+bool changeTiles(Grid& grid, const std::vector<std::vector<bool>>& accessibleGrid, bool breakWhenSolved=true){
     short row = 4;
     short col = 4;
     int key;
     bool quit = false;
     std::vector<std::vector<bool>> tempAccGrid;
+    char currentSymbol = '_';
+    std::vector<int> choices;
 
     bool running = true;
     while(running){
@@ -247,24 +249,36 @@ bool changeTiles(Grid& grid, const std::vector<std::vector<bool>>& accessibleGri
         tempAccGrid = accessibleGrid;
         for (int i=0; i < SIZE; i++) tempAccGrid[i][col] = tempAccGrid[row][i] = false;
         colorValidity(grid, tempAccGrid);
-        if (accessibleGrid[row][col]) updateDisplayedGrid('_', row, col, 33);
+        if (accessibleGrid[row][col]) updateDisplayedGrid(currentSymbol, row, col, 33);
 
-        std::cout << "\nPlease use W (^), S (v), A(<), D(>) keys to navigate to the tile you want to replace" << std::endl
-                  << "and input a new digit ('0' for an empty tile).\n";
+        if (!breakWhenSolved) {
+            if (isSolvable(grid)) {
+                std::cout << "\x1b[2K\033[32mYour sudoku puzzle seems solvable!\033[0m" << std::endl;
+                std::cout << "When you're ready (C)onfirm the sudoku." << std::endl << std::endl;
+                choices = {'w', 's', 'a', 'd', '0', 'c'};
+            } else {
+                std::cout << "\x1b[2K\033[31mSudoku is unsolvable!\033[0m" << std::endl << "\x1b[2K" << std::endl << std::endl;
+                choices = {'w', 's', 'a', 'd', '0'};
+            }
+        }
+        std::cout << "Please use W (^), S (v), A(<), D(>) keys to navigate to the tile you want to replace" << std::endl
+                  << "and input a new digit ('0' for an empty tile).\n\n";
 
         // Parse input
         while(true){
-            key = read({'w', 's', 'a', 'd', '0'}, true);
-            if (key == 119) {row = (--row + SIZE) % SIZE; break;}   // w
-            if (key == 115) {row = ++row % SIZE; break;}            // s
-            if (key == 97) {col = (--col + SIZE) % SIZE; break;}    // a
-            if (key == 100) {col = ++col % SIZE; break;}            // d
-            if (isdigit(key) && accessibleGrid[row][col]) {grid[row][col] = key - '0'; break;}  // digit
-            if (key == 'x') running = quit = false; break;
+            key = read(choices, true);
+            if (key == 'w' || key == 'W') {row = (--row + SIZE) % SIZE; currentSymbol = '_'; break;}   // w
+            if (key == 's' || key == 'S') {row = ++row % SIZE; currentSymbol = '_'; break;}            // s
+            if (key == 'a' || key == 'A') {col = (--col + SIZE) % SIZE; currentSymbol = '_'; break;}   // a
+            if (key == 'd' || key == 'D') {col = ++col % SIZE; currentSymbol = '_'; break;}            // d
+            if (isdigit(key) && accessibleGrid[row][col])                                              // digit
+                {grid[row][col] = key - '0'; currentSymbol = key; break;}  
+            if (!breakWhenSolved && key == 'c' || key == 'C') {running = false; break;}                // c
+            if (key == 'x') {running = false; quit = true; break;}                                     // x
         }
 
         // Check validity
-        if (isSolvable(grid)) break;
+        if (breakWhenSolved && isSolvable(grid)) break;
     }
     return quit;
 }
@@ -324,21 +338,22 @@ bool inputSudoku(Grid& grid) {
     colorValidity(grid, acc);
 
     while(true){
-        if (!isSolvable(grid)) std::cout << "\033[31mSudoku is unsolvable!\n\033[0m";
+        if (!isSolvable(grid)) {
+            if (changeTiles(grid, acc, false)) {quit = true; break;}
+        } else {
+            system("cls");
+            displayGrid(grid);
+            std::cout << "\033[32mYour sudoku puzzle seems solvable!\033[0m" << std::endl
+                       << "Are you (S)atisfieed with the grid or would you like to (C)hange some of the tiles?";
+            int choice = read({'s', 'c'});
 
-        if (changeTiles(grid, acc)) {quit = true; break;}
-
-        system("cls");
-        displayGrid(grid);
-        std::cout << "\033[32mYour sudoku puzzle seems solvable!\033[0m" << std::endl
-                  << "Are you (S)atisfieed with the grid or would you like to (C)hange some of the tiles?\n";
-        int choice = read({'s', 'c'});
-
-        if (choice == 'c' || choice == 'C'){
-            if (changeTiles(grid, acc)) quit = true;
-        } else if (choice == 's' || choice == 'S'){
-            break;
-        } else if (choice == 'x' || choice == 'X') {quit = true; break;}
+            if (choice == 'c' || choice == 'C'){
+                std::cout << "\x1b[2K";
+                if (changeTiles(grid, acc, false)) {quit = true; break;}
+            } else if (choice == 's' || choice == 'S'){
+                break;
+            } else if (choice == 'x' || choice == 'X') {quit = true; break;}
+        }
     }
 
     return quit;
@@ -461,7 +476,11 @@ int main() {
                 displayGrid(sudokuGrid); 
                 std::cout << "\n\033[32mSmudoku solved!\033[0m\n\n";
             }
-            else std::cout << "\r\033[31mNo solution exists for the given Sudoku!\033[0m\n";
+            else {
+                system("cls");
+                displayGrid(sudokuGrid);
+                std::cout << "\033[31mNo solution exists for the given Sudoku!\033[0m" << std::endl << std::endl;
+            }
         }
         // User solves sudoku ###########################
         else{
@@ -469,7 +488,7 @@ int main() {
             std::cerr << "[ERROR] Feature not implemented: User solves sudoku\n";
         }
 
-        std::cout << "\nWould you like to e(X)it the programm or (R)eturn back to the main screen?";
+        std::cout << "Would you like to e(X)it the programm or (R)eturn back to the main screen?";
         choice = read({'r'});
         if (choice == 'x' || choice == 'X') break;
     }
